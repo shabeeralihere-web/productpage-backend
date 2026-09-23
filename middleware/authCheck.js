@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import HttpError from "../helpers/httpError.js";
-import { User } from "../models/user.js";
+import { User } from "../models/User.js";
 
 const userAuthCheck = async (req, res, next) => {
   if (req.method === "OPTIONS") {
