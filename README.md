@@ -1,80 +1,80 @@
-# ProductPage Backend
+# ProductHub Backend
 
-Backend API for a MERN stack product management application built with Node.js, Express.js, and MongoDB.
+Backend API for ProductHub, a MERN-based e-commerce application built with Node.js, Express.js, MongoDB, and JWT authentication.
 
-The application provides authentication, product management, role-based access control, and cart functionality.
+The backend provides authentication, role-based authorization, product management, image uploads, cart management, user profiles, and order creation.
 
----
-
-## 🚀 Features
+## Features
 
 - User registration and login
 - JWT-based authentication
+- Role-based access for User, Seller, and Admin
 - Password hashing with bcrypt
-- Role-based authorization
-- Admin product management
 - Product CRUD operations
-- Cart management
-- MongoDB database integration
-- Express.js REST API
-- Request validation
+- Product image upload with Multer
+- Product search
+- Product pagination
+- Seller-specific product management
+- Shopping cart management
+- Cart pagination
+- Order creation
+- Order validation
+- User profile management
+- Profile image upload
 - Centralized error handling
-- Environment variable configuration
+- MongoDB database integration
 
----
-
-## 🛠️ Technologies Used
+## Tech Stack
 
 - Node.js
 - Express.js
 - MongoDB
 - Mongoose
-- JWT (JSON Web Token)
+- JWT
 - bcryptjs
-- express-validator
+- Multer
+- Express Validator
+- CORS
 - dotenv
-- cors
-- nodemon
+- Nodemon
 
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```text
 backend/
-│
 ├── config/
 │   └── connectDB.js
-│
 ├── controllers/
 │   ├── authController.js
 │   ├── cartController.js
+│   ├── orderController.js
 │   └── productController.js
-│
 ├── helpers/
 │   └── httpError.js
-│
 ├── middleware/
 │   ├── authCheck.js
 │   ├── adminCheck.js
+│   ├── fileUpload.js
 │   └── validation.js
-│
 ├── models/
-│   ├── User.js
+│   ├── Cart.js
+│   ├── Order.js
 │   ├── Product.js
-│   └── Cart.js
-│
+│   └── User.js
 ├── routes/
 │   ├── authRoutes.js
-│   ├── productRoutes.js
-│   └── cartRoutes.js
-│
+│   ├── cartRoutes.js
+│   ├── orderRoutes.js
+│   └── productRoutes.js
+├── uploads/
 ├── validators/
-│   └── authValidators.js
-│
+│   ├── authValidators.js
+│   └── orderValidator.js
+├── views/
 ├── .env
 ├── .env.example
 ├── .gitignore
 ├── package.json
 ├── package-lock.json
+├── README.md
 └── server.js

@@ -5,21 +5,16 @@ import {
   userRegister,
   getAllUsers,
   getProfile,
-  updateProfile
+  updateProfile,
 } from "../controllers/authController.js";
 
 import { validate } from "../middleware/validation.js";
 import { registerValidator } from "../validators/authValidators.js";
-
 import userAuthCheck from "../middleware/authCheck.js";
 import adminCheck from "../middleware/adminCheck.js";
-
 import upload from "../middleware/fileUpload.js";
 
 const authRoutes = express.Router();
-
-
-// ================= REGISTER =================
 
 authRoutes.post(
   "/register",
@@ -28,16 +23,10 @@ authRoutes.post(
   userRegister
 );
 
-
-// ================= LOGIN =================
-
 authRoutes.post(
   "/login",
   userLogin
 );
-
-
-// ================= GET ALL USERS =================
 
 authRoutes.get(
   "/users",
@@ -46,17 +35,11 @@ authRoutes.get(
   getAllUsers
 );
 
-
-// ================= GET MY PROFILE =================
-
 authRoutes.get(
   "/profile",
   userAuthCheck,
   getProfile
 );
-
-
-// ================= UPDATE MY PROFILE =================
 
 authRoutes.put(
   "/profile",
@@ -64,6 +47,5 @@ authRoutes.put(
   upload.single("profileImage"),
   updateProfile
 );
-
 
 export default authRoutes;

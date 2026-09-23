@@ -33,7 +33,13 @@ const userSchema = new mongoose.Schema(
       default: "user"
     },
 
-    // Profile image
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+      default: ""
+    },
+
     profileImage: {
       type: String,
       default: null

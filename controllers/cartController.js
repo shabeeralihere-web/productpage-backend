@@ -2,48 +2,33 @@ import { Product } from "../models/Product.js";
 import HttpError from "../helpers/httpError.js";
 import { Cart } from "../models/Cart.js";
 
-
-// ================= GET CART =================
-
 export const getCart = async (req, res, next) => {
   try {
     const userId = req.userData.userId;
 
-    // ==============================
-    // PAGINATION VALUES
-    // ==============================
+    const page = Math.max(
+      Number(req.query.page) || 1,
+      1
+    );
 
-    const page = Number(req.query.page) || 1;
+    const limit = 6;
 
-    // 4 cart items per page
-    const limit = 2;
-
-    // Calculate how many items to skip
     const skip = (page - 1) * limit;
-
-    // ==============================
-    // GET CART ITEMS
-    // ==============================
 
     const cartItems = await Cart.find({ userId })
       .populate("productId")
       .skip(skip)
       .limit(limit);
 
-    // ==============================
-    // FIND INVALID CART ITEMS
-    // ==============================
-
-    // Find cart items whose product no longer exists
     const invalidCartItems = cartItems.filter(
       (item) => !item.productId
     );
 
-    // Delete invalid cart items from database
     if (invalidCartItems.length > 0) {
-      const invalidCartIds = invalidCartItems.map(
-        (item) => item._id
-      );
+      const invalidCartIds =
+        invalidCartItems.map(
+          (item) => item._id
+        );
 
       await Cart.deleteMany({
         _id: { $in: invalidCartIds },
@@ -51,58 +36,40 @@ export const getCart = async (req, res, next) => {
       });
     }
 
-    // ==============================
-    // KEEP VALID CART ITEMS
-    // ==============================
+    const validCartItems =
+      cartItems.filter(
+        (item) => item.productId
+      );
 
-    const validCartItems = cartItems.filter(
-      (item) => item.productId
-    );
-
-    // ==============================
-    // TOTAL CART ITEMS
-    // ==============================
-
-    const totalItems = await Cart.countDocuments({
-      userId
-    });
-
-    // ==============================
-    // TOTAL PAGES
-    // ==============================
+    const totalItems =
+      await Cart.countDocuments({
+        userId
+      });
 
     const totalPages = Math.ceil(
       totalItems / limit
     );
-
-    // ==============================
-    // RESPONSE
-    // ==============================
 
     return res.status(200).json({
       success: true,
       data: validCartItems,
       pagination: {
         currentPage: page,
-        totalPages: totalPages,
-        totalItems: totalItems,
-        limit: limit
+        totalPages,
+        totalItems,
+        limit
       }
     });
-
   } catch (error) {
     return next(
       new HttpError(
-        error.message || "Internal Server Error",
+        error.message ||
+          "Internal Server Error",
         500
       )
     );
   }
 };
-
-
-// ================= UPDATE CART QUANTITY =================
-
 export const updateCartQuantity = async (req, res, next) => {
   try {
     const { cartId, quantity } = req.body;
@@ -150,7 +117,6 @@ export const updateCartQuantity = async (req, res, next) => {
       message: "Cart quantity updated",
       data: cartItem
     });
-
   } catch (error) {
     return next(
       new HttpError(
@@ -160,9 +126,6 @@ export const updateCartQuantity = async (req, res, next) => {
     );
   }
 };
-
-
-// ================= REMOVE FROM CART =================
 
 export const removeFromCart = async (req, res, next) => {
   try {
@@ -199,7 +162,6 @@ export const removeFromCart = async (req, res, next) => {
       success: true,
       message: "Product removed from cart"
     });
-
   } catch (error) {
     return next(
       new HttpError(
@@ -209,9 +171,6 @@ export const removeFromCart = async (req, res, next) => {
     );
   }
 };
-
-
-// ================= CLEAR CART =================
 
 export const clearCart = async (req, res, next) => {
   try {
@@ -225,7 +184,6 @@ export const clearCart = async (req, res, next) => {
       success: true,
       message: "Cart cleared successfully"
     });
-
   } catch (error) {
     return next(
       new HttpError(
@@ -235,9 +193,6 @@ export const clearCart = async (req, res, next) => {
     );
   }
 };
-
-
-// ================= ADD TO CART =================
 
 export const addToCart = async (req, res, next) => {
   try {
@@ -254,7 +209,6 @@ export const addToCart = async (req, res, next) => {
       );
     }
 
-    // Check whether product exists
     const product = await Product.findById(productId);
 
     if (!product) {
@@ -266,7 +220,6 @@ export const addToCart = async (req, res, next) => {
       );
     }
 
-    // Check whether product is already in cart
     const existingCartItem = await Cart.findOne({
       userId,
       productId
@@ -280,7 +233,6 @@ export const addToCart = async (req, res, next) => {
       });
     }
 
-    // Add product to cart
     const newCartItem = new Cart({
       userId,
       productId,
@@ -294,7 +246,6 @@ export const addToCart = async (req, res, next) => {
       message: "Product added to cart",
       data: newCartItem
     });
-
   } catch (error) {
     return next(
       new HttpError(

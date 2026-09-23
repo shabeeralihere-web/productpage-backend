@@ -15,7 +15,6 @@ import upload from "../middleware/fileUpload.js";
 const productRoutes = express.Router();
 
 const validateProduct = (req, res, next) => {
-
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
@@ -29,9 +28,7 @@ const validateProduct = (req, res, next) => {
 
 productRoutes.post(
     "/addProduct",
-
     userAuthCheck,
-
     upload.single("image"),
 
     body("name")
