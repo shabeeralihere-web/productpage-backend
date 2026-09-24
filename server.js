@@ -13,7 +13,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://product-page-pied-nine.vercel.app",
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,17 +36,17 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 
 app.use((error, req, res, next) => {
-  res.status(error.code || 500).json({
+  res.status(error.statusCode || 500).json({
     success: false,
     message: error.message || "Something went wrong",
   });
 });
 
-connectDB();
-
 app.get("/", (req, res) => {
-  res.send("Helloo from");
+  res.status(200).send("Helloo from");
 });
+
+connectDB();
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
