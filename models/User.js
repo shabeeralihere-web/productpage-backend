@@ -5,48 +5,54 @@ const userSchema = new mongoose.Schema(
     firstName: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     lastName: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     email: {
       type: String,
       required: true,
       unique: true,
-      trim: true
+      trim: true,
     },
 
     password: {
       type: String,
       required: true,
-      match: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/
+      match:
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
     },
 
     role: {
       type: String,
       enum: ["user", "admin", "seller"],
-      default: "user"
+      default: "user",
     },
 
     bio: {
       type: String,
       trim: true,
       maxlength: 300,
-      default: ""
+      default: "",
     },
 
     profileImage: {
       type: String,
-      default: null
-    }
+      default: null,
+    },
+
+    profileImagePublicId: {
+      type: String,
+      default: null,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 

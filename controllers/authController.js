@@ -1,8 +1,28 @@
 import { User } from "../models/User.js";
-
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import HttpError from "../helpers/httpError.js";
+import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
+
+const uploadProfileImageToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "producthub/profiles",
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+
+    streamifier.createReadStream(buffer).pipe(uploadStream);
+  });
+};
 
 export const userRegister = async (req, res, next) => {
   try {
@@ -29,7 +49,7 @@ export const userRegister = async (req, res, next) => {
       lastName,
       email,
       password: hashedPassword,
-      role
+      role,
     });
 
     await newUser.save();
@@ -37,10 +57,12 @@ export const userRegister = async (req, res, next) => {
     const token = jwt.sign(
       {
         user_id: newUser._id,
-        role: newUser.role
+        role: newUser.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_TOKEN_EXPIRY }
+      {
+        expiresIn: process.env.JWT_TOKEN_EXPIRY,
+      }
     );
 
     return res.status(201).json({
@@ -50,16 +72,13 @@ export const userRegister = async (req, res, next) => {
         email: newUser.email,
         role: newUser.role,
         firstName: newUser.firstName,
-        lastName: newUser.lastName
+        lastName: newUser.lastName,
       },
-      accessToken: token
+      accessToken: token,
     });
   } catch (error) {
     return next(
-      new HttpError(
-        error.message || "Internal Server Error",
-        500
-      )
+      new HttpError(error.message || "Internal Server Error", 500)
     );
   }
 };
@@ -69,15 +88,11 @@ export const userLogin = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email) {
-      return next(
-        new HttpError("Email is required", 400)
-      );
+      return next(new HttpError("Email is required", 400));
     }
 
     if (!password) {
-      return next(
-        new HttpError("Password is required", 400)
-      );
+      return next(new HttpError("Password is required", 400));
     }
 
     const user = await User.findOne({ email }).select(
@@ -85,36 +100,23 @@ export const userLogin = async (req, res, next) => {
     );
 
     if (!user) {
-      return next(
-        new HttpError(
-          "Invalid email or password",
-          401
-        )
-      );
+      return next(new HttpError("Invalid email or password", 401));
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return next(
-        new HttpError(
-          "Invalid email or password",
-          401
-        )
-      );
+      return next(new HttpError("Invalid email or password", 401));
     }
 
     const token = jwt.sign(
       {
         user_id: user._id,
-        role: user.role
+        role: user.role,
       },
       process.env.JWT_SECRET,
       {
-        expiresIn: process.env.JWT_TOKEN_EXPIRY
+        expiresIn: process.env.JWT_TOKEN_EXPIRY,
       }
     );
 
@@ -125,16 +127,13 @@ export const userLogin = async (req, res, next) => {
         email: user.email,
         role: user.role,
         firstName: user.firstName,
-        lastName: user.lastName
+        lastName: user.lastName,
       },
-      accessToken: token
+      accessToken: token,
     });
   } catch (error) {
     return next(
-      new HttpError(
-        error.message || "Internal Server Error",
-        500
-      )
+      new HttpError(error.message || "Internal Server Error", 500)
     );
   }
 };
@@ -147,14 +146,11 @@ export const getAllUsers = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      data: users
+      data: users,
     });
   } catch (error) {
     return next(
-      new HttpError(
-        error.message || "Internal Server Error",
-        500
-      )
+      new HttpError(error.message || "Internal Server Error", 500)
     );
   }
 };
@@ -164,25 +160,20 @@ export const getProfile = async (req, res, next) => {
     const userId = req.userData.userId;
 
     const user = await User.findById(userId).select(
-      "_id firstName lastName email role bio profileImage"
+      "_id firstName lastName email role bio profileImage profileImagePublicId"
     );
 
     if (!user) {
-      return next(
-        new HttpError("User not found", 404)
-      );
+      return next(new HttpError("User not found", 404));
     }
 
     return res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
     return next(
-      new HttpError(
-        error.message || "Internal Server Error",
-        500
-      )
+      new HttpError(error.message || "Internal Server Error", 500)
     );
   }
 };
@@ -191,18 +182,12 @@ export const updateProfile = async (req, res, next) => {
   try {
     const userId = req.userData.userId;
 
-    const {
-      firstName,
-      lastName,
-      bio
-    } = req.body;
+    const { firstName, lastName, bio } = req.body;
 
     const user = await User.findById(userId);
 
     if (!user) {
-      return next(
-        new HttpError("User not found", 404)
-      );
+      return next(new HttpError("User not found", 404));
     }
 
     if (!firstName || !lastName) {
@@ -219,7 +204,12 @@ export const updateProfile = async (req, res, next) => {
     user.bio = bio || "";
 
     if (req.file) {
-      user.profileImage = req.file.path;
+      const result = await uploadProfileImageToCloudinary(
+        req.file.buffer
+      );
+
+      user.profileImage = result.secure_url;
+      user.profileImagePublicId = result.public_id;
     }
 
     await user.save();
@@ -234,15 +224,13 @@ export const updateProfile = async (req, res, next) => {
         email: user.email,
         role: user.role,
         bio: user.bio,
-        profileImage: user.profileImage
-      }
+        profileImage: user.profileImage,
+        profileImagePublicId: user.profileImagePublicId,
+      },
     });
   } catch (error) {
     return next(
-      new HttpError(
-        error.message || "Internal Server Error",
-        500
-      )
+      new HttpError(error.message || "Internal Server Error", 500)
     );
   }
 };
