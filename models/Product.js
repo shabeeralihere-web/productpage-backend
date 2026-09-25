@@ -6,13 +6,13 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      minLength: 3
+      minLength: 3,
     },
 
     price: {
       type: Number,
       required: true,
-      min: 0.01
+      min: 0.01,
     },
 
     category: {
@@ -23,23 +23,28 @@ const productSchema = new mongoose.Schema(
         "Mobiles",
         "Computers",
         "Audio",
-        "Accessories"
-      ]
+        "Accessories",
+      ],
     },
 
     image: {
       type: String,
-      required: true
+      required: true,
+    },
+
+    imagePublicId: {
+      type: String,
+      required: false,
     },
 
     sellerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false
-    }
+      required: false,
+    },
   },
   {
-    timestamps: true
+    timestamps: true,
   }
 );
 

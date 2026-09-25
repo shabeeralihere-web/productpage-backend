@@ -1,5 +1,26 @@
 import HttpError from "../helpers/httpError.js";
 import { Product } from "../models/Product.js";
+import cloudinary from "../config/cloudinary.js";
+import streamifier from "streamifier";
+
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "producthub/products",
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+
+    streamifier.createReadStream(buffer).pipe(uploadStream);
+  });
+};
 
 export const addProduct = async (req, res, next) => {
   try {
@@ -10,18 +31,28 @@ export const addProduct = async (req, res, next) => {
     const userRole = req.userData.userRole;
 
     if (userRole !== "admin" && userRole !== "seller") {
-      return next(new HttpError("Only admin and seller can add products", 403));
+      return next(
+        new HttpError(
+          "Only admin and seller can add products",
+          403
+        )
+      );
     }
 
     if (!image) {
-      return next(new HttpError("Product image is required", 400));
+      return next(
+        new HttpError("Product image is required", 400)
+      );
     }
+
+    const result = await uploadToCloudinary(image.buffer);
 
     const newProduct = new Product({
       name,
       price,
       category,
-      image: image.path,
+      image: result.secure_url,
+      imagePublicId: result.public_id,
       sellerId: userId,
     });
 
@@ -33,7 +64,12 @@ export const addProduct = async (req, res, next) => {
       data: newProduct,
     });
   } catch (error) {
-    return next(new HttpError(error.message || "Internal server error", 500));
+    return next(
+      new HttpError(
+        error.message || "Internal server error",
+        500
+      )
+    );
   }
 };
 
@@ -80,7 +116,9 @@ export const getProducts = async (req, res, next) => {
       .skip(skip)
       .limit(limit);
 
-    const totalPages = Math.ceil(totalProducts / limit);
+    const totalPages = Math.ceil(
+      totalProducts / limit
+    );
 
     return res.status(200).json({
       success: true,
@@ -93,7 +131,9 @@ export const getProducts = async (req, res, next) => {
       },
     });
   } catch (error) {
-    return next(new HttpError("Internal server error", 500));
+    return next(
+      new HttpError("Internal server error", 500)
+    );
   }
 };
 
@@ -117,7 +157,9 @@ export const getMyProducts = async (req, res, next) => {
       .skip(skip)
       .limit(limit);
 
-    const totalPages = Math.ceil(totalProducts / limit);
+    const totalPages = Math.ceil(
+      totalProducts / limit
+    );
 
     return res.status(200).json({
       success: true,
@@ -130,7 +172,9 @@ export const getMyProducts = async (req, res, next) => {
       },
     });
   } catch (error) {
-    return next(new HttpError("Internal server error", 500));
+    return next(
+      new HttpError("Internal server error", 500)
+    );
   }
 };
 
@@ -141,7 +185,9 @@ export const getProductById = async (req, res, next) => {
     const product = await Product.findById(id);
 
     if (!product) {
-      return next(new HttpError("Product not found", 404));
+      return next(
+        new HttpError("Product not found", 404)
+      );
     }
 
     return res.status(200).json({
@@ -149,14 +195,15 @@ export const getProductById = async (req, res, next) => {
       data: product,
     });
   } catch (error) {
-    return next(new HttpError("Internal server Error", 500));
+    return next(
+      new HttpError("Internal server Error", 500)
+    );
   }
 };
 
 export const updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-
     const { name, price, category } = req.body;
     const image = req.file;
 
@@ -166,7 +213,9 @@ export const updateProduct = async (req, res, next) => {
     const product = await Product.findById(id);
 
     if (!product) {
-      return next(new HttpError("Product not found", 404));
+      return next(
+        new HttpError("Product not found", 404)
+      );
     }
 
     if (userRole === "admin") {
@@ -175,7 +224,12 @@ export const updateProduct = async (req, res, next) => {
       product.category = category;
 
       if (image) {
-        product.image = image.path;
+        const result = await uploadToCloudinary(
+          image.buffer
+        );
+
+        product.image = result.secure_url;
+        product.imagePublicId = result.public_id;
       }
 
       await product.save();
@@ -189,11 +243,24 @@ export const updateProduct = async (req, res, next) => {
 
     if (userRole === "seller") {
       if (!product.sellerId) {
-        return next(new HttpError("You can only edit your own products", 403));
+        return next(
+          new HttpError(
+            "You can only edit your own products",
+            403
+          )
+        );
       }
 
-      if (product.sellerId.toString() !== userId.toString()) {
-        return next(new HttpError("You can only edit your own products", 403));
+      if (
+        product.sellerId.toString() !==
+        userId.toString()
+      ) {
+        return next(
+          new HttpError(
+            "You can only edit your own products",
+            403
+          )
+        );
       }
 
       product.name = name;
@@ -201,7 +268,12 @@ export const updateProduct = async (req, res, next) => {
       product.category = category;
 
       if (image) {
-        product.image = image.path;
+        const result = await uploadToCloudinary(
+          image.buffer
+        );
+
+        product.image = result.secure_url;
+        product.imagePublicId = result.public_id;
       }
 
       await product.save();
@@ -213,9 +285,19 @@ export const updateProduct = async (req, res, next) => {
       });
     }
 
-    return next(new HttpError("You are not allowed to update products", 403));
+    return next(
+      new HttpError(
+        "You are not allowed to update products",
+        403
+      )
+    );
   } catch (error) {
-    return next(new HttpError(error.message || "Internal server error", 500));
+    return next(
+      new HttpError(
+        error.message || "Internal server error",
+        500
+      )
+    );
   }
 };
 
@@ -229,7 +311,9 @@ export const deleteProduct = async (req, res, next) => {
     const product = await Product.findById(id);
 
     if (!product) {
-      return next(new HttpError("Product not found", 404));
+      return next(
+        new HttpError("Product not found", 404)
+      );
     }
 
     if (userRole === "admin") {
@@ -244,13 +328,22 @@ export const deleteProduct = async (req, res, next) => {
     if (userRole === "seller") {
       if (!product.sellerId) {
         return next(
-          new HttpError("You can only delete your own products", 403),
+          new HttpError(
+            "You can only delete your own products",
+            403
+          )
         );
       }
 
-      if (product.sellerId.toString() !== userId.toString()) {
+      if (
+        product.sellerId.toString() !==
+        userId.toString()
+      ) {
         return next(
-          new HttpError("You can only delete your own products", 403),
+          new HttpError(
+            "You can only delete your own products",
+            403
+          )
         );
       }
 
@@ -262,8 +355,18 @@ export const deleteProduct = async (req, res, next) => {
       });
     }
 
-    return next(new HttpError("You are not allowed to delete products", 403));
+    return next(
+      new HttpError(
+        "You are not allowed to delete products",
+        403
+      )
+    );
   } catch (error) {
-    return next(new HttpError(error.message || "Internal server error", 500));
+    return next(
+      new HttpError(
+        error.message || "Internal server error",
+        500
+      )
+    );
   }
 };
