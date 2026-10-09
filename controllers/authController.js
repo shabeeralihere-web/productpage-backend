@@ -29,7 +29,9 @@ export const userRegister = async (req, res, next) => {
     const { firstName, lastName, email, password, role } = req.body;
 
     if (!firstName || !lastName || !email || !password) {
-      return next(new HttpError("All fields are required", 400));
+      return next(
+        new HttpError("All fields are required", 400)
+      );
     }
 
     if (!["user", "seller"].includes(role)) {
@@ -39,7 +41,9 @@ export const userRegister = async (req, res, next) => {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      return next(new HttpError("Email already exists", 400));
+      return next(
+        new HttpError("Email already exists", 400)
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -69,16 +73,24 @@ export const userRegister = async (req, res, next) => {
       success: true,
       message: "User registered successfully",
       data: {
+        _id: newUser._id,
         email: newUser.email,
         role: newUser.role,
         firstName: newUser.firstName,
         lastName: newUser.lastName,
+        bio: newUser.bio,
+        profileImage: newUser.profileImage,
+        profileImagePublicId:
+          newUser.profileImagePublicId,
       },
       accessToken: token,
     });
   } catch (error) {
     return next(
-      new HttpError(error.message || "Internal Server Error", 500)
+      new HttpError(
+        error.message || "Internal Server Error",
+        500
+      )
     );
   }
 };
@@ -88,25 +100,36 @@ export const userLogin = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email) {
-      return next(new HttpError("Email is required", 400));
+      return next(
+        new HttpError("Email is required", 400)
+      );
     }
 
     if (!password) {
-      return next(new HttpError("Password is required", 400));
+      return next(
+        new HttpError("Password is required", 400)
+      );
     }
 
     const user = await User.findOne({ email }).select(
-      "_id firstName lastName email role password"
+      "_id firstName lastName email role password bio profileImage profileImagePublicId"
     );
 
     if (!user) {
-      return next(new HttpError("Invalid email or password", 401));
+      return next(
+        new HttpError("Invalid email or password", 401)
+      );
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
 
     if (!isMatch) {
-      return next(new HttpError("Invalid email or password", 401));
+      return next(
+        new HttpError("Invalid email or password", 401)
+      );
     }
 
     const token = jwt.sign(
@@ -124,16 +147,24 @@ export const userLogin = async (req, res, next) => {
       success: true,
       message: "Login successful",
       data: {
+        _id: user._id,
         email: user.email,
         role: user.role,
         firstName: user.firstName,
         lastName: user.lastName,
+        bio: user.bio,
+        profileImage: user.profileImage,
+        profileImagePublicId:
+          user.profileImagePublicId,
       },
       accessToken: token,
     });
   } catch (error) {
     return next(
-      new HttpError(error.message || "Internal Server Error", 500)
+      new HttpError(
+        error.message || "Internal Server Error",
+        500
+      )
     );
   }
 };
@@ -150,7 +181,10 @@ export const getAllUsers = async (req, res, next) => {
     });
   } catch (error) {
     return next(
-      new HttpError(error.message || "Internal Server Error", 500)
+      new HttpError(
+        error.message || "Internal Server Error",
+        500
+      )
     );
   }
 };
@@ -164,7 +198,9 @@ export const getProfile = async (req, res, next) => {
     );
 
     if (!user) {
-      return next(new HttpError("User not found", 404));
+      return next(
+        new HttpError("User not found", 404)
+      );
     }
 
     return res.status(200).json({
@@ -173,7 +209,10 @@ export const getProfile = async (req, res, next) => {
     });
   } catch (error) {
     return next(
-      new HttpError(error.message || "Internal Server Error", 500)
+      new HttpError(
+        error.message || "Internal Server Error",
+        500
+      )
     );
   }
 };
@@ -187,7 +226,9 @@ export const updateProfile = async (req, res, next) => {
     const user = await User.findById(userId);
 
     if (!user) {
-      return next(new HttpError("User not found", 404));
+      return next(
+        new HttpError("User not found", 404)
+      );
     }
 
     if (!firstName || !lastName) {
@@ -204,12 +245,14 @@ export const updateProfile = async (req, res, next) => {
     user.bio = bio || "";
 
     if (req.file) {
-      const result = await uploadProfileImageToCloudinary(
-        req.file.buffer
-      );
+      const result =
+        await uploadProfileImageToCloudinary(
+          req.file.buffer
+        );
 
       user.profileImage = result.secure_url;
-      user.profileImagePublicId = result.public_id;
+      user.profileImagePublicId =
+        result.public_id;
     }
 
     await user.save();
@@ -225,12 +268,16 @@ export const updateProfile = async (req, res, next) => {
         role: user.role,
         bio: user.bio,
         profileImage: user.profileImage,
-        profileImagePublicId: user.profileImagePublicId,
+        profileImagePublicId:
+          user.profileImagePublicId,
       },
     });
   } catch (error) {
     return next(
-      new HttpError(error.message || "Internal Server Error", 500)
+      new HttpError(
+        error.message || "Internal Server Error",
+        500
+      )
     );
   }
 };

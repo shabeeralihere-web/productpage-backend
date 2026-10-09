@@ -370,3 +370,19 @@ export const deleteProduct = async (req, res, next) => {
     );
   }
 };
+
+export const getFeaturedProducts = async (req, res, next) => {
+  try {
+    const products = await Product.find({})
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .select("_id name price image category");
+
+    res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

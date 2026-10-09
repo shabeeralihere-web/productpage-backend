@@ -1,53 +1,22 @@
-
 import { body } from "express-validator";
 
 export const orderValidator = [
-  body("productId")
-    .notEmpty()
-    .withMessage("Product is required"),
-
-  body("productName")
-    .trim()
-    .notEmpty()
-    .withMessage("Product name is required"),
-
-  body("productImage")
-    .trim()
-    .notEmpty()
-    .withMessage("Product image is required"),
-
-  body("price")
-    .notEmpty()
-    .withMessage("Price is required")
-    .isFloat({ min: 0.01 })
-    .withMessage("Price must be greater than 0"),
-
-  body("quantity")
-    .notEmpty()
-    .withMessage("Quantity is required")
-    .isInt({ min: 1 })
-    .withMessage("Quantity must be at least 1"),
-
   body("deliveryAddress.fullName")
     .trim()
     .notEmpty()
-    .withMessage("Full name is required")
-    .isLength({ min: 3 })
-    .withMessage("Full name must be at least 3 characters"),
+    .withMessage("Full name is required"),
 
   body("deliveryAddress.phone")
     .trim()
     .notEmpty()
     .withMessage("Phone number is required")
-    .matches(/^[6-9]\d{9}$/)
-    .withMessage("Enter a valid 10-digit phone number"),
+    .isLength({ min: 10, max: 15 })
+    .withMessage("Phone number must be between 10 and 15 digits"),
 
   body("deliveryAddress.address")
     .trim()
     .notEmpty()
-    .withMessage("Address is required")
-    .isLength({ min: 5 })
-    .withMessage("Address must be at least 5 characters"),
+    .withMessage("Address is required"),
 
   body("deliveryAddress.city")
     .trim()
@@ -62,9 +31,7 @@ export const orderValidator = [
   body("deliveryAddress.pinCode")
     .trim()
     .notEmpty()
-    .withMessage("PIN code is required")
-    .matches(/^\d{6}$/)
-    .withMessage("PIN code must be 6 digits"),
+    .withMessage("PIN code is required"),
 
   body("paymentMethod")
     .notEmpty()

@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
 
-const orderSchema = new mongoose.Schema(
+const orderItemSchema = new mongoose.Schema(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
     productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
+      required: true,
+    },
+
+    sellerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
 
@@ -27,6 +27,7 @@ const orderSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     quantity: {
@@ -38,6 +39,47 @@ const orderSchema = new mongoose.Schema(
     totalPrice: {
       type: Number,
       required: true,
+      min: 0,
+    },
+
+    status: {
+      type: String,
+      enum: [
+        "pending",
+        "confirmed",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+      default: "pending",
+    },
+  },
+  {
+    _id: true,
+  }
+);
+
+const orderSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    items: {
+      type: [orderItemSchema],
+      required: true,
+      validate: {
+        validator: (items) => items.length > 0,
+        message: "Order must contain at least one item",
+      },
+    },
+
+    totalPrice: {
+      type: Number,
+      required: true,
+      min: 0,
     },
 
     deliveryAddress: {
@@ -76,18 +118,6 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ["cod", "upi", "card", "netbanking"],
       required: true,
-    },
-
-    status: {
-      type: String,
-      enum: [
-        "pending",
-        "confirmed",
-        "shipped",
-        "delivered",
-        "cancelled",
-      ],
-      default: "pending",
     },
   },
   {

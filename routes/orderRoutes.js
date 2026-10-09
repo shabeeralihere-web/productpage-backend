@@ -1,36 +1,88 @@
-import express from "express";
-import { validationResult } from "express-validator";
+  import express from "express";
+  import { validationResult } from "express-validator";
 
-import { createOrder } from "../controllers/orderController.js";
-import userAuthCheck from "../middleware/authCheck.js";
-import { orderValidator } from "../validators/orderValidator.js";
+  import {
+    createOrder,
+    getMyOrders,
+    getOrderById,
+    getSellerOrders,
+    updateSellerOrderItemStatus,
+    getAdminOrders,
+    getAdminOrderById,
+  } from "../controllers/orderController.js";
 
-const router = express.Router();
+  import userAuthCheck from "../middleware/authCheck.js";
+  import adminCheck from "../middleware/adminCheck.js";
 
-router.post(
-  "/create",
-  userAuthCheck,
-  orderValidator,
-  (req, res, next) => {
-    const errors = validationResult(req);
+  import {
+    orderValidator,
+  } from "../validators/orderValidator.js";
 
-    if (!errors.isEmpty()) {
-      const fieldErrors = {};
+  const router = express.Router();
 
-      errors.array().forEach((error) => {
-        fieldErrors[error.path] = error.msg;
-      });
+  router.post(
+    "/create",
+    userAuthCheck,
+    orderValidator,
+    (req, res, next) => {
+      const errors = validationResult(req);
 
-      return res.status(400).json({
-        success: false,
-        message: "Please fix the validation errors",
-        errors: fieldErrors,
-      });
-    }
+      if (!errors.isEmpty()) {
+        const fieldErrors = {};
 
-    next();
-  },
-  createOrder
-);
+        errors.array().forEach((error) => {
+          fieldErrors[error.path] = error.msg;
+        });
 
-export default router;
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please fix the validation errors",
+          errors: fieldErrors,
+        });
+      }
+
+      next();
+    },
+    createOrder
+  );
+
+  router.get(
+    "/my-orders",
+    userAuthCheck,
+    getMyOrders
+  );
+
+  router.get(
+    "/seller",
+    userAuthCheck,
+    getSellerOrders
+  );
+
+  router.get(
+    "/admin",
+    userAuthCheck,
+    adminCheck,
+    getAdminOrders
+  );
+
+  router.get(
+    "/admin/:id",
+    userAuthCheck,
+    adminCheck,
+    getAdminOrderById
+  );
+
+  router.put(
+    "/:orderId/items/:itemId/status",
+    userAuthCheck,
+    updateSellerOrderItemStatus
+  );
+
+  router.get(
+    "/:id",
+    userAuthCheck,
+    getOrderById
+  );
+
+  export default router;
